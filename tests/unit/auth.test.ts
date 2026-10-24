@@ -7,7 +7,9 @@ import { rateLimit } from "../../src/lib/rate-limit";
 describe("admin auth", () => {
   it("hashes and verifies passwords with scrypt", async () => {
     const h = await hashPassword("correct horse battery");
-    expect(h).toMatch(/^scrypt\$/);
+    expect(h).toMatch(/^scrypt:/);
+    expect(h).not.toContain("$");
+    expect(await verifyPassword("correct horse battery", h.replaceAll(":", "$"))).toBe(true); // legacy format
     expect(await verifyPassword("correct horse battery", h)).toBe(true);
     expect(await verifyPassword("wrong password!!", h)).toBe(false);
     expect(await verifyPassword("x", undefined)).toBe(false);

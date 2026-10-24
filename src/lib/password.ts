@@ -8,17 +8,21 @@ const R = 8;
 const P = 1;
 const LEN = 64;
 
-/** Format: scrypt$N$r$p$<salt b64>$<hash b64> */
+/**
+ * Format: scrypt:N:r:p:<salt b64>:<hash b64>. Colons, not "$", so the value survives
+ * .env files and Docker Compose, which would treat "$..." as variable references.
+ * The older "$"-separated form is still accepted.
+ */
 export async function hashPassword(password: string): Promise<string> {
   if (password.length < 12) throw new Error("Use a password of at least 12 characters");
   const salt = randomBytes(16);
   const hash = await scrypt(password, salt, LEN, { N, r: R, p: P, maxmem: 128 * N * R * 2 });
-  return ["scrypt", N, R, P, salt.toString("base64"), hash.toString("base64")].join("$");
+  return ["scrypt", N, R, P, salt.toString("base64"), hash.toString("base64")].join(":");
 }
 
 export async function verifyPassword(password: string, stored: string | undefined): Promise<boolean> {
   if (!stored) return false;
-  const parts = stored.split("$");
+  const parts = stored.trim().split(/[:$]/);
   if (parts.length !== 6 || parts[0] !== "scrypt") return false;
   const [, n, r, p, saltB64, hashB64] = parts as [string, string, string, string, string, string];
   const expected = Buffer.from(hashB64, "base64");
