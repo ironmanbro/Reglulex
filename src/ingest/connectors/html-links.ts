@@ -10,6 +10,12 @@ export interface ExtractedLink {
 
 const GENERIC_ANCHOR = /^(download|pdf|view|click here|here|read more|more|details?|open|link|english|hindi|\(?\d+(\.\d+)?\s*(kb|mb)\)?|file)$/i;
 
+function isGeneric(title: string): boolean {
+  if (!title || GENERIC_ANCHOR.test(title)) return true;
+  const rest = title.replace(/\(?\d+(\.\d+)?\s*(kb|mb)\)?/gi, " ").replace(/\b(download|view|pdf|click here|file|english|hindi)\b/gi, " ").trim();
+  return rest.length < 6;
+}
+
 const DATE_TOKEN =
   /\b(\d{1,2}[/.\-]\d{1,2}[/.\-]\d{4}|[A-Za-z]{3,9}\.?\s+\d{1,2},?\s+\d{4}|\d{1,2}(?:st|nd|rd|th)?[\s\-][A-Za-z]{3,9}\.?,?[\s\-]\d{4}|\d{4}-\d{2}-\d{2})\b/;
 
@@ -29,9 +35,11 @@ export function extractLinks(html: string, baseUrl: string, linkPattern: RegExp)
     if (!url || !linkPattern.test(url)) return;
 
     const row = a.closest("tr").length ? a.closest("tr") : a.closest("li").length ? a.closest("li") : a.parent();
-    const rowText = cleanTitle(row.text());
+    // Join cell/child texts with spaces so adjacent cells ("05/01/2099" + "Title") don't run together.
+    const cells = row.find("td, th").length ? row.find("td, th") : row.contents();
+    const rowText = cleanTitle(cells.map((_, c) => $(c).text()).get().join(" "));
     let title = cleanTitle(a.attr("title") || a.text());
-    if (!title || title.length < 6 || GENERIC_ANCHOR.test(title)) {
+    if (isGeneric(title)) {
       // Fall back to the row's text minus dates and file-size noise.
       title = cleanTitle(
         rowText
@@ -45,7 +53,7 @@ export function extractLinks(html: string, baseUrl: string, linkPattern: RegExp)
     const dateRaw = dateMatch && parseIndianDate(dateMatch[0]) ? dateMatch[0] : null;
 
     const existing = out.get(url);
-    if (!existing || (existing.title.length < title.length && GENERIC_ANCHOR.test(existing.title))) {
+    if (!existing || (existing.title.length < title.length && isGeneric(existing.title))) {
       out.set(url, { url, title, dateRaw: dateRaw ?? existing?.dateRaw ?? null, rowText: rowText.slice(0, 500) });
     }
   });

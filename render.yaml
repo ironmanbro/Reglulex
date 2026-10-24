@@ -1,0 +1,65 @@
+# Render Blueprint: managed Postgres + web service + background worker (same Docker image).
+# Original files go to S3-compatible storage (e.g. Cloudflare R2) — set the S3_* secrets in the dashboard.
+databases:
+  - name: fi-library-db
+    databaseName: fi_library
+    plan: basic-256mb          # paid plans include daily backups and point-in-time recovery
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: fi-library-web
+    runtime: docker
+    plan: starter
+    dockerCommand: entrypoint web
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: fi-library-db, property: connectionString }
+      - key: DATABASE_SSL
+        value: require
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PUBLIC_SITE_URL
+        sync: false
+      - key: ALERT_WEBHOOK_URL
+        sync: false
+
+  - type: worker
+    name: fi-library-worker
+    runtime: docker
+    plan: starter
+    dockerCommand: entrypoint worker
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: fi-library-db, property: connectionString }
+      - key: DATABASE_SSL
+        value: require
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: ALERT_WEBHOOK_URL
+        sync: false

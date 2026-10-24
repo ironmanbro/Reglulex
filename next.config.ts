@@ -23,7 +23,6 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
-  output: "standalone",
   poweredByHeader: false,
   serverExternalPackages: ["postgres", "mammoth"],
   async headers() {

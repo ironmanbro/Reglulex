@@ -22,6 +22,16 @@ export function parseIndianDate(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const s = raw.replace(/\s+/g, " ").trim();
   let m: RegExpMatchArray | null;
+  // Checked first: it carries a time zone that can shift the calendar date.
+  // RFC 822 (RSS pubDate): "Tue, 14 Oct 2026 10:00:00 +0530"
+  if (/^[A-Za-z]{3},/.test(s)) {
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) {
+      // Use the calendar date in IST, which is the publisher's local date.
+      const ist = new Date(d.getTime() + 330 * 60_000);
+      return iso(ist.getUTCFullYear(), ist.getUTCMonth() + 1, ist.getUTCDate());
+    }
+  }
   if ((m = s.match(/\b(\d{4})-(\d{2})-(\d{2})\b/))) return iso(+m[1]!, +m[2]!, +m[3]!);
   if ((m = s.match(/\b(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})\b/))) return iso(+m[3]!, +m[2]!, +m[1]!);
   // "Oct 14, 2026" / "October 14, 2026"
@@ -33,15 +43,6 @@ export function parseIndianDate(raw: string | null | undefined): string | null {
   if ((m = s.match(/\b(\d{1,2})(?:st|nd|rd|th)?[\s\-]+([A-Za-z]{3,9})\.?,?[\s\-]+(\d{4})\b/))) {
     const mon = MONTHS[m[2]!.toLowerCase()];
     if (mon) return iso(+m[3]!, mon, +m[1]!);
-  }
-  // RFC 822 (RSS pubDate): "Tue, 14 Oct 2026 10:00:00 +0530"
-  if (/^[A-Za-z]{3},/.test(s)) {
-    const d = new Date(s);
-    if (!Number.isNaN(d.getTime())) {
-      // Use the calendar date in IST, which is the publisher's local date.
-      const ist = new Date(d.getTime() + 330 * 60_000);
-      return iso(ist.getUTCFullYear(), ist.getUTCMonth() + 1, ist.getUTCDate());
-    }
   }
   return null;
 }

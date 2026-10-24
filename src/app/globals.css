@@ -139,7 +139,7 @@ label { font-size: .88rem; color: var(--ink-2); }
 .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 960px) { .grid.cols-4, .grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .grid.cols-4, .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .grid.cols-4, .grid.cols-3, .grid.cols-2 { grid-template-columns: minmax(0, 1fr); } }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
 a.card { display: block; text-decoration: none; color: var(--ink); transition: border-color .15s; }
 a.card:hover { border-color: var(--accent); }
@@ -168,7 +168,7 @@ a.card:hover { border-color: var(--accent); }
 
 /* Library layout */
 .library { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 32px; align-items: start; }
-@media (max-width: 900px) { .library { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .library { grid-template-columns: minmax(0, 1fr); } }
 .filters { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; position: sticky; top: 16px; }
 @media (max-width: 900px) { .filters { position: static; } }
 .filters fieldset { border: 0; padding: 0; margin: 0 0 16px; }
@@ -203,7 +203,7 @@ mark { background: var(--mark); color: inherit; padding: 0 1px; border-radius: 2
 .breadcrumbs a { color: var(--muted); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .doc-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; }
-@media (max-width: 1000px) { .doc-layout { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .doc-layout { grid-template-columns: minmax(0, 1fr); } }
 dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; margin: 0; font-size: .9rem; }
 dl.meta dt { color: var(--muted); }
 dl.meta dd { margin: 0; overflow-wrap: anywhere; }
@@ -233,3 +233,5 @@ blockquote.evidence { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid
 .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .flash { padding: 10px 14px; border-radius: var(--radius); background: var(--good-soft); color: var(--good); margin-bottom: 16px; }
 .flash.error { background: var(--bad-soft); color: var(--bad); }
+.stack > label { display: flex; flex-direction: column; gap: 4px; }
+.stack > label input:not([type="checkbox"]) { width: 100%; }

@@ -98,8 +98,15 @@ const REL_CUES: { rel: RelType; re: RegExp }[] = [
  * Infers the relationship from wording in a short window *before* the citation
  * ("In partial modification of circular X") and a shorter one after it ("X stands withdrawn").
  */
+// A sentence boundary: ". " or "; " followed by a capital/opening bracket (so "No. 5" or "Jan. 1" do not split).
+const SENTENCE_END = /[.;]\s+(?=[A-Z(])/g;
+
 function relationFromContext(before: string, after: string): RelType {
-  const window = before.slice(-160) + " " + after.slice(0, 80);
+  // Only wording in the same sentence as the citation counts.
+  const parts = before.slice(-200).split(SENTENCE_END);
+  const sameBefore = parts[parts.length - 1] ?? "";
+  const sameAfter = after.slice(0, 100).split(SENTENCE_END)[0] ?? "";
+  const window = sameBefore.slice(-160) + " " + sameAfter;
   for (const cue of REL_CUES) if (cue.re.test(window)) return cue.rel;
   return "related_to";
 }
