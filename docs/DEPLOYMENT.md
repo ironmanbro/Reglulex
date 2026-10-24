@@ -25,11 +25,12 @@
 ## Option B — single VM with Docker Compose
 
 ```bash
-cp .env.example .env    # set ADMIN_PASSWORD_HASH, SESSION_SECRET, PUBLIC_SITE_URL, POSTGRES_PASSWORD, S3_* creds
+cp .env.example .env    # set ADMIN_PASSWORD_HASH, SESSION_SECRET, PUBLIC_SITE_URL (and POSTGRES_PASSWORD)
+docker compose run --rm web node_modules/.bin/tsx scripts/hash-password.ts   # prints ADMIN_PASSWORD_HASH
 docker compose up -d --build
 ```
 
-Put a TLS-terminating reverse proxy (Caddy, nginx) in front of port 3000. The volumes `pgdata` and `objects` hold all state, so back them up (below).
+Put a TLS-terminating reverse proxy (Caddy, nginx) or a Cloudflare Tunnel in front of port 3000. The volumes `pgdata` (database) and `originals` (original files) hold all state, so back them up (below). To keep originals in S3/R2 instead, set `STORAGE_DRIVER=s3` and the `S3_*` variables in `.env`.
 
 ## Go-live checklist
 
@@ -60,7 +61,7 @@ pg_restore --no-owner --dbname "$NEW_DATABASE_URL" fi_library_2026-10-24.dump
 
 Managed providers' automated daily backups / PITR should be enabled as well. Keep at least one off-platform dump per week.
 
-**Original files**: object keys are content-addressed (`originals/ab/<sha256>.pdf`) and never overwritten, so a bucket replica or a periodic `rclone sync` / `aws s3 sync` to a second bucket is a complete backup. Enable bucket versioning where available.
+**Original files** (S3/R2): object keys are content-addressed (`originals/ab/<sha256>.pdf`) and never overwritten, so a bucket replica or a periodic `rclone sync` / `aws s3 sync` to a second bucket is a complete backup. Enable bucket versioning where available. With Docker Compose and local storage, back up the `originals` volume, e.g. `docker run --rm -v reglulex_originals:/d -v $PWD:/b alpine tar czf /b/originals.tgz -C /d .`
 
 **Restore drill**: restore the dump into a scratch database, point a local `pnpm dev` at it with the same bucket (read-only key), and open a few documents.
 

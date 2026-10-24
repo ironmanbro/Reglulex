@@ -24,13 +24,14 @@ ENV NODE_ENV=production PORT=3000
 COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
-COPY --from=build /app/public* ./public/
+COPY --from=build /app/public ./public
 COPY --from=build /app/src ./src
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/db ./db
 COPY --from=build /app/tsconfig.json ./
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint
-RUN chmod +x /usr/local/bin/entrypoint && useradd -r -u 10001 app && chown -R app /app
+# data/storage: original files when STORAGE_DRIVER=local (mount a volume here).
+RUN chmod +x /usr/local/bin/entrypoint && useradd -r -u 10001 app && mkdir -p /app/data/storage && chown -R app /app
 USER app
 EXPOSE 3000
 ENTRYPOINT ["tini", "--", "entrypoint"]
